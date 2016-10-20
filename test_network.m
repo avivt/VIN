@@ -1,12 +1,9 @@
 function [optimal_lengths,pred_lengths] = test_network(model, weight_file, test_file, imsize, k)
-% script to evaluate network on a test-set of trajectories
+% script to evaluate success rate of network on a test-set of trajectories
+
 tmp = py.convNN.convNN; clear tmp;  % to load Python
 size_1 = imsize(1); size_2 = imsize(2);
-if strcmp(model,'conv')
-    nn = py.convNN.convNN(pyargs('im_size',int32([size_1,size_2]),'model','conv'));
-elseif strcmp(model,'multiVIN')
-    nn = py.convMultiBatch.convMultiBatch(pyargs('im_size',int32([size_1,size_2]),'k',int32(k),'batchsize',int32(1),'statebatchsize',int32(1)));
-elseif strcmp(model,'VIN')
+if strcmp(model,'VIN')
     nn = py.convBatch.convBatch(pyargs('im_size',int32([size_1,size_2]),'k',int32(k),'batchsize',int32(1),'statebatchsize',int32(1)));
 elseif strcmp(model,'untiedVIN')
     nn = py.vin_untied.vin_untied(pyargs('im_size',int32([size_1,size_2]),'k',int32(k),'batchsize',int32(1),'statebatchsize',int32(1)));
@@ -14,22 +11,12 @@ elseif strcmp(model,'FCN')
     nn = py.FCN.fcn(pyargs('im_size',int32([size_1,size_2]),'batchsize',int32(1),'statebatchsize',int32(1)));
 elseif strcmp(model,'CNN')
     nn = py.CNN.cnn(pyargs('im_size',int32([size_1,size_2]),'batchsize',int32(1)));
-elseif strcmp(model,'dense1')
-    nn = py.NNobj.NNobj(pyargs('im_size',int32([size_1,size_2]),'model','dense1'));
-elseif strcmp(model,'dense2')
-    nn = py.NNobj.NNobj(pyargs('im_size',int32([size_1,size_2]),'model','dense2'));
-elseif strcmp(model,'dense3')
-    nn = py.NNobj.NNobj(pyargs('im_size',int32([size_1,size_2]),'model','dense3'));
 end
 nn.load_weights(pyargs('infile',weight_file));
 load(test_file);
 %% Evaluate NN
 % Predict trajectories in closed-loop, and compare with shortest path
 Ndomains = size(all_im_data,1);                  % number of domains
-
-numActions = 8;
-action_vecs = ([[-1,0; 1,0; 0,1; 0,-1]; 1/sqrt(2)*[-1,1; -1,-1; 1,1; 1,-1]])';  % state difference unit vectors for each action
-action_vecs_unnorm = ([-1,0; 1,0; 0,1; 0,-1; -1,1; -1,-1; 1,1; 1,-1]);          % un-normalized state difference vectors
 
 % containers for data
 optimal_lengths = zeros(Ndomains,1);
@@ -42,31 +29,18 @@ for dom = 1:Ndomains
     im = reshape(all_im_data(dom,:),size_1,size_2);
     G = Gridworld_Graph8(im,goal(1),goal(2));
     G_no_obs = Gridworld_Graph8(no_obs_im,goal(1),goal(2));
-    value_prior = reshape(all_value_data(dom,:),size_1,size_2);                          % get prior over value function (just reward)
+    value_prior = reshape(all_value_data(dom,:),size_1,size_2);
     if ~isempty(all_states_xy{dom}) && size(all_states_xy{dom},1)>1
         L = size(all_states_xy{dom},1)*2;
         pred_traj = zeros(L,2);
         pred_traj(1,:) = all_states_xy{dom}(1,:);
         for j = 2:L
-            % creat one-hot current state vector and image vector, and save to
-            % file
-            r_one_hot = zeros(1,size_1);
-            c_one_hot = zeros(1,size_2);
-            r_one_hot(pred_traj(j-1,1)) = 1;
-            c_one_hot(pred_traj(j-1,2)) = 1;
-            if ~strcmp(model,'CNN')
-                state_data = uint8([r_one_hot, c_one_hot]);
-            else
-                state_image = zeros(size_1,size_2);
-                state_image(pred_traj(j-1,1), pred_traj(j-1,2)) = 1;
-                state_data = uint8(reshape(state_image',1,[]));
-            end
+            % creat current state vector and image vector, and save to file
             state_xy_data = uint8([pred_traj(j-1,1)-1, pred_traj(j-1,2)-1]);
             im_data = uint8(reshape(im',1,[]));
             value_data = uint8(reshape(value_prior',1,[]));
-            % call NN to predict action from input file (don't know how to
-            % pass state data directly yet)
-            save('test_input.mat','im_data','state_data','value_data','state_xy_data');
+            % call NN to predict action from input file 
+            save('test_input.mat','im_data','value_data','state_xy_data');
             a = nn.predict(pyargs('input', 'test_input.mat'))+1;
             % calculate next state based on action
             s = G.map_ind_to_state(pred_traj(j-1,1),pred_traj(j-1,2));
