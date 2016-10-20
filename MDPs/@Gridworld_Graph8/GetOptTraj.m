@@ -1,0 +1,35 @@
+function [states_xy, states_one_hot] = GetOptTraj(M,s0)
+% Optimal trajectories from initial state to goal
+% return states_xy: cell array of trajectories in xy-space
+%        states_one_hot: cell array of trajectories in one-hot vectors for
+%        x and y
+[G,W] = M.getGraph_inv;
+G_inv = G';     % transpose graph for tranposing single-node SP -> single destination SP
+N = size(G,1);
+Ns = 1;
+init_states = s0;
+goal_s = M.map_ind_to_state(M.targetRow,M.targetCol);
+states = cell(Ns,1);
+states_xy = cell(Ns,1);
+states_one_hot = cell(Ns,1);
+i = 1;
+options.edge_weight = W;
+[~, pred] = shortest_paths(G_inv,goal_s,options);       % all SP from goal
+for n = 1:Ns
+    [path] = SP(pred,goal_s,init_states(n));    % get SP from goal->init
+    path = path(end:-1:1)';                     % reverse path since we want init->goal
+    states{i} = path;
+    i = i+1;
+end
+for i = 1:length(states)
+    L = length(states{i});
+    [r,c] = M.getCoords(states{i});
+    row_mat = zeros(L,M.Nrow);
+    col_mat = zeros(L,M.Ncol);
+    for j = 1:L
+        row_mat(j,r(j)) = 1;
+        col_mat(j,c(j)) = 1;
+    end
+    states_one_hot{i} = [row_mat col_mat];
+    states_xy{i} = [r,c];
+end
