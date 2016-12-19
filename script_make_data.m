@@ -10,7 +10,7 @@ dom_size = [size_1,size_2];                 % domain size
 maxTrajLen = (size_1+size_2);               % this is approximate, just to preallocate memory
 set_var('Ndomains', 10000);                 % number of domains
 set_var('maxObs', 10);                      % maximum number of obstacles in a domain
-set_var('maxObsSize',[]);                   % maximum obstacle size
+set_var('maxObsSize',0.0);                   % maximum obstacle size
 set_var('Ntrajs', 1);                       % trajectories from each domain
 set_var('goal', [1,1]);                     % goal position
 set_var('rand_goal', false);                % random goal position
