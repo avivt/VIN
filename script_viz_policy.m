@@ -14,7 +14,7 @@ elseif strcmp(model,'vin')
 elseif strcmp(model,'fcn')
     nn = py.FCN.fcn(pyargs('im_size',int32([size_1,size_2]),'batchsize',int32(1),'statebatchsize',int32(1)));    
 end
-weight_file = './nips16results/gridworld/grid28_VIN.pk';
+weight_file = './results/grid28_VIN.pk';
 nn.load_weights(pyargs('infile',weight_file));
 
 %% Evaluate NN
