@@ -2,7 +2,6 @@
 import numpy as np
 import theano
 import theano.tensor as T
-from theano.tensor.signal import downsample
 
 
 def init_weights_T(*shape):
@@ -74,7 +73,7 @@ class ConvLayer(object):
         )
 
         # downsample each feature map individually, using maxpooling
-        pooled_out = theano.tensor.signal.downsample.max_pool_2d(
+        pooled_out = theano.tensor.signal.pool.pool_2d(
             input=conv_out,
             ds=poolsize,
             ignore_border=True
@@ -95,3 +94,4 @@ class ConvLayer(object):
 
         # keep track of model input
         self.input = input_tensor
+
