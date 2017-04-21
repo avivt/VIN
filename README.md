@@ -31,6 +31,8 @@ After training, a weights file (e.g., /results/grid28_VIN.pk) will be created. Y
 - test_network.m to numerically evaluate the learned network on a test set (needs to be generated).
 
 
-Related code:
+# Related code:
 Kent Sommer's implementation of VINs (including data generation) in python + pytorch
 https://github.com/kentsommer/pytorch-value-iteration-networks
+Abhishek Kumar's implementation of VINs in Tensor Flow
+https://github.com/TheAbhiKumar/tensorflow-value-iteration-networks
