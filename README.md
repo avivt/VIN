@@ -29,3 +29,8 @@ After training, a weights file (e.g., /results/grid28_VIN.pk) will be created. Y
 - script_viz_policy.m to run the trained VIN with the learned weights and view the trajectories
   it produces (line 17 selects the weights file).
 - test_network.m to numerically evaluate the learned network on a test set (needs to be generated).
+
+
+Related code:
+Kent Sommer's implementation of VINs (including data generation) in python + pytorch
+https://github.com/kentsommer/pytorch-value-iteration-networks
